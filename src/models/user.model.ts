@@ -88,7 +88,7 @@ import { Schema, model, Document, Model } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-interface IUser extends Document {
+export interface IUser extends Document {
   username: string;
   email: string;
   fullname: string;
