@@ -5,6 +5,7 @@ import { Request, Response } from "express";
 import User, { IUser } from "../models/user.model";
 import uploadOnCloudnary from "../utils/cloudnary.ts";
 import logger from "../utils/logger.ts";
+import jwt from "jsonwebtoken";
 
 interface RequestUser extends Request {
     files?:
@@ -14,6 +15,7 @@ interface RequestUser extends Request {
         | Express.Multer.File[]
         | undefined;
     file?: Express.Multer.File;
+    user?: IUser;
 }
 interface Tokens {
     refreshToken: string;
@@ -22,6 +24,14 @@ interface Tokens {
 interface HttpOptions {
     httpOnly: boolean;
     secure: boolean;
+}
+interface DecodedToken {
+    _id: string;
+    email: string;
+    username: string;
+    fullname: string;
+    iat: number;
+    exp: number;
 }
 async function generateAccessTokenAndRefreshToken(
     userId: string,
@@ -45,6 +55,7 @@ async function generateAccessTokenAndRefreshToken(
         );
     }
 }
+
 const registerUser = asyncHandler(async (req: RequestUser, res: Response) => {
     const { fullname, email, username, password } = req.body;
     if (
@@ -145,7 +156,84 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
                 { user: loggedInUser, accessToken, refreshToken },
                 "User login Successfully",
             ),
-        ); 
+        );
 });
 
-export { registerUser,loginUser };
+const logoutUser = asyncHandler(async (req: RequestUser, res: Response) => {
+    await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                refreshToken: undefined,
+            },
+        },
+        {
+            new: true,
+        },
+    ) as IUser;
+    const cookieOptions: HttpOptions = {
+        httpOnly: true,
+        secure: true,
+    };
+
+    res.status(200)
+        .clearCookie("accessToken", cookieOptions)
+        .clearCookie("refreshToken", cookieOptions)
+        .json(new ApiResponse(200, {}, "User logout successfully"));
+});
+
+const updateRefreshToken = asyncHandler(async (req: Request, res: Response) => {
+    const incomingRefreshToken = req.cookies.refreshToken ||
+        req.body?.refreshToken;
+
+    if (!incomingRefreshToken) {
+        throw new ApiError(404, "Refresh token not found");
+    }
+    logger.info(incomingRefreshToken);
+
+    if (process.env.REFRESH_TOKEN_SECRET === undefined) {
+        throw new ApiError(404, "Refresh token secret not found");
+    }
+
+    const decodeIncomingRefreshToken = jwt.verify(
+        incomingRefreshToken,
+        process.env.REFRESH_TOKEN_SECRET,
+    ) as DecodedToken;
+    logger.info(JSON.stringify(decodeIncomingRefreshToken));
+
+    try {
+        const user = await User.findById(
+            decodeIncomingRefreshToken?._id as string,
+        ) as IUser;
+        logger.info(user);
+        if (incomingRefreshToken !== user?.refreshToken) {
+            throw new ApiError(401, "Invalid User");
+        }
+
+        const { accessToken, refreshToken } =
+            await generateAccessTokenAndRefreshToken(user?._id as string);
+
+        const cookieOptions: HttpOptions = {
+            httpOnly: true,
+            secure: true,
+        };
+
+        return res.status(200)
+            .cookie("accessToken", accessToken, cookieOptions)
+            .cookie("refreshToken", refreshToken, cookieOptions)
+            .json(
+                new ApiResponse(
+                    200,
+                    {},
+                    "Tokens updated successfully",
+                ),
+            );
+    } catch (error) {
+        throw new ApiError(
+            500,
+            error + " someting went wrong while updating refresh token",
+        );
+    }
+});
+
+export { loginUser, logoutUser, registerUser, updateRefreshToken };

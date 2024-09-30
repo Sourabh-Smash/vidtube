@@ -1,6 +1,12 @@
 import { Router } from "express";
-import { loginUser, registerUser } from "../controllers/user.controller.ts";
+import {
+    loginUser,
+    logoutUser,
+    registerUser,
+    updateRefreshToken,
+} from "../controllers/user.controller.ts";
 import upload from "../middlewares/multer.middleware.ts";
+import verifyJwt from "../middlewares/auth.middleware.ts";
 const router = Router();
 
 router.route("/register").post(
@@ -13,4 +19,7 @@ router.route("/register").post(
 
 router.route("/login").post(loginUser);
 
+// secure routers
+router.route("/logout").post(verifyJwt, logoutUser);
+router.route("/update-refresh").post(updateRefreshToken);
 export default router;
