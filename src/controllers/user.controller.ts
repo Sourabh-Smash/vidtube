@@ -74,6 +74,8 @@ const registerUser = asyncHandler(async (req: RequestUser, res: Response) => {
     const coverImageFile = req.files && "coverImage" in req.files
         ? req.files.coverImage[0]
         : undefined;
+    // logger.info(avatarFile);
+    // logger.info(coverImageFile);
     const avatarLocalPath = avatarFile?.path;
     const coverImageLocalPath = coverImageFile?.path || undefined;
     if (!avatarLocalPath) throw new ApiError(404, "Avatar image not found");
@@ -290,14 +292,72 @@ const updateAccountDetails = asyncHandler(
     },
 );
 
+const updateAvatarPhoto = asyncHandler(
+    async (req: RequestUser, res: Response) => {
+        const avatarFile = req.file;
+        logger.info(avatarFile?.path);
+        if (!avatarFile) throw new ApiError(404, "Avatar image not found");
 
+        const avatarOnCloudnary = await uploadOnCloudnary(avatarFile?.path);
+        // logger.info(JSON.stringify(avatarOnCloudnary));
+
+        const user = await User.findByIdAndUpdate(
+            req?.user?._id,
+            {
+                $set: { avatar: avatarOnCloudnary?.url || "" },
+            },
+            {
+                new: true,
+            },
+        ).select(["-password", "-refreshToken"]) as IUser;
+
+        return res.status(201).json(
+            new ApiResponse(
+                201,
+                user?.avatar,
+                "User avatar updated successfully",
+            ),
+        );
+    },
+);
+
+const updateCoverImagePhoto = asyncHandler(
+    async (req: RequestUser, res: Response) => {
+        const coverImage = req.file;
+        logger.info(coverImage?.path);
+        if (!coverImage) throw new ApiError(404, "Cover image not found");
+
+        const coverImageOnCloudnary = await uploadOnCloudnary(coverImage?.path);
+        // logger.info(JSON.stringify(avatarOnCloudnary));
+
+        const user = await User.findByIdAndUpdate(
+            req?.user?._id,
+            {
+                $set: { avatar: coverImageOnCloudnary?.url || "" },
+            },
+            {
+                new: true,
+            },
+        ).select(["-password", "-refreshToken"]) as IUser;
+
+        return res.status(201).json(
+            new ApiResponse(
+                201,
+                user?.avatar,
+                "User cover image updated successfully",
+            ),
+        );
+    },
+);
 
 export {
+    getCurrentUser,
     loginUser,
     logoutUser,
     registerUser,
+    updateAccountDetails,
+    updateAvatarPhoto,
+    updateCoverImagePhoto,
     updatePassword,
     updateRefreshToken,
-    getCurrentUser,
-    updateAccountDetails
 };
