@@ -1,8 +1,11 @@
 import { Router } from "express";
 import {
+    getCurrentUser,
     loginUser,
     logoutUser,
     registerUser,
+    updateAccountDetails,
+    updatePassword,
     updateRefreshToken,
 } from "../controllers/user.controller.ts";
 import upload from "../middlewares/multer.middleware.ts";
@@ -22,4 +25,7 @@ router.route("/login").post(loginUser);
 // secure routers
 router.route("/logout").post(verifyJwt, logoutUser);
 router.route("/update-refresh").post(updateRefreshToken);
+router.route("/update-pass").post(verifyJwt, updatePassword);
+router.route("/current-user").get(verifyJwt, getCurrentUser);
+router.route("/update-user-details").post(verifyJwt, updateAccountDetails);
 export default router;

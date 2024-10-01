@@ -236,4 +236,68 @@ const updateRefreshToken = asyncHandler(async (req: Request, res: Response) => {
     }
 });
 
-export { loginUser, logoutUser, registerUser, updateRefreshToken };
+const updatePassword = asyncHandler(async (req: RequestUser, res: Response) => {
+    const { oldPassword, newPassword } = req.body;
+    if (!(oldPassword || newPassword)) {
+        throw new ApiError(400, "Old password and new password doesnt match");
+    }
+    const user = await User.findById(req.user?._id) as IUser;
+
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "password entered by user is incorrect");
+    }
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json(
+        new ApiResponse(200, {}, "Password updated successfully"),
+    );
+});
+
+const getCurrentUser = asyncHandler(async (req: RequestUser, res: Response) => {
+    return res.status(200).json(
+        new ApiResponse(200, req.user, "Received Current User successfully"),
+    );
+});
+
+const updateAccountDetails = asyncHandler(
+    async (req: RequestUser, res: Response) => {
+        const { fullname, email } = req.body;
+
+        if (!(fullname || email)) {
+            throw new ApiError(404, "account fields are missing");
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req?.user?._id,
+            {
+                $set: { fullname, email },
+            },
+            {
+                new: true,
+            },
+        ).select(["-password", "-refreshToken"]) as IUser;
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                user,
+                "User account details updated successfully",
+            ),
+        );
+    },
+);
+
+
+
+export {
+    loginUser,
+    logoutUser,
+    registerUser,
+    updatePassword,
+    updateRefreshToken,
+    getCurrentUser,
+    updateAccountDetails
+};
