@@ -350,6 +350,77 @@ const updateCoverImagePhoto = asyncHandler(
     },
 );
 
+const getUserChannelDetails = asyncHandler(
+    async (req: RequestUser, res: Response) => {
+        const { username } = req.params;
+
+        if (!username.trim()) throw new ApiError(400, "username is missing");
+
+        const channel = await User.aggregate([
+            { // this pipeline finds the user based on username
+                $match: { // same like find we use in mangoose
+                    username: username?.toLowerCase(),
+                },
+            },
+            { // this pipeline is finding total subscribers to the channel
+                $lookup: { // used to join the tables
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "channel",
+                    as: "subscribers",
+                },
+            },
+            { // this pipeline is finding total channels i have subscribed to
+                $lookup: { // used to join the tables
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "subscriber",
+                    as: "subscribedTo",
+                },
+            },
+            { // now add the above data in form of new fields
+                $addFields: {
+                    subscriberCount: { // total count of subscriber a channel have
+                        $size: "$subscribers",
+                    },
+                    channelSubscribedToCount: { // total count of channels which SUBSCRIBER have subscribed to
+                        $size: "$subscribedTo",
+                    },
+                    isSubscribed: { // check if current user is subscribed to the channel or not
+                        $con: { // used to write conditions
+                            if: { $in: [req.user?._id, "$subscribers"] }, // $in checks if a element is present in array or object or not
+                            then: true,
+                            else: false,
+                        },
+                    },
+                },
+            },
+            { // used to select what fieds we want to give to frontend
+                $project: {
+                    email: 1,
+                    fullname: 1,
+                    username: 1,
+                    avatar: 1,
+                    coverImage: 1,
+                    subscriberCount: 1,
+                    channelSubscribedToCount: 1,
+                    isSubscribed: 1,
+                },
+            },
+        ]);
+        logger.info(channel);
+        if (!channel?.length) throw new ApiError(404, "User doesnt exists");
+
+        res.status(200).json(
+            new ApiResponse(
+                200,
+                channel[0],
+                "channel details got successfully",
+            ),
+        );
+    },
+);
+
 export {
     getCurrentUser,
     loginUser,
@@ -360,4 +431,74 @@ export {
     updateCoverImagePhoto,
     updatePassword,
     updateRefreshToken,
+    getUserChannelDetails
 };
+
+// Mongoose and MongoDB aggregation pipelines are powerful tools for data analysis and transformation. Here’s a concise cheatsheet for commonly used stages in aggregation pipelines:
+
+// 1. **$match**: Filters the documents to pass only those that match specified conditions.
+
+//    ```javascript
+//    { $match: { status: 'A' } }
+//    ```
+
+// 2. **$group**: Groups documents by a specific identifier and allows for the accumulation of data.
+
+//    ```javascript
+//    { $group: { _id: "$cust_id", total: { $sum: "$amount" } } }
+//    ```
+
+// 3. **$project**: Reshapes each document by adding new fields or removing existing ones.
+
+//    ```javascript
+//    { $project: { item: 1, total: { $sum: "$amount" } } }
+//    ```
+
+// 4. **$sort**: Sorts the documents in the pipeline.
+
+//    ```javascript
+//    { $sort: { total: -1 } }
+//    ```
+
+// 5. **$limit**: Limits the number of documents that pass through the pipeline.
+
+//    ```javascript
+//    { $limit: 5 }
+//    ```
+
+// 6. **$skip**: Skips a specified number of documents.
+
+//    ```javascript
+//    { $skip: 5 }
+//    ```
+
+// 7. **$unwind**: Deconstructs an array field to output a document for each element.
+
+//    ```javascript
+//    { $unwind: "$tags" }
+//    ```
+
+// 8. **$lookup**: Performs a left outer join to another collection.
+
+//    ```javascript
+//    { $lookup: { from: "products", localField: "prod_id", foreignField: "_id", as: "orderDetails" } }
+//    ```
+
+// 9. **$addFields**: Adds new fields to documents.
+
+//    ```javascript
+//    { $addFields: { totalPrice: { $multiply: ["$price", "$quantity"] } } }
+//    ```
+
+// 10. **$count**: Counts the number of documents.
+
+//     ```javascript
+//     { $count: "totalSales" }
+//     ```
+
+// Make sure to double-check syntax and options in the official MongoDB documentation to verify operations and ensure they’re suitable for your specific needs.
+
+// ### Related Questions
+// - [What is the difference between aggregation and map-reduce in MongoDB?](#related)
+// - [How do I optimize aggregation queries in MongoDB?](#related)
+// - [Can you explain the $facet stage in MongoDB aggregation?](#related)

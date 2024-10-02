@@ -8,7 +8,8 @@ import {
     updateAvatarPhoto,
     updatePassword,
     updateRefreshToken,
-    updateCoverImagePhoto
+    updateCoverImagePhoto,
+    getUserChannelDetails
 } from "../controllers/user.controller.ts";
 import upload from "../middlewares/multer.middleware.ts";
 import verifyJwt from "../middlewares/auth.middleware.ts";
@@ -40,4 +41,6 @@ router.route("/update-cover-image").post(
     verifyJwt,
     updateCoverImagePhoto,
 );
+router.route("/c/:username").post(verifyJwt, getUserChannelDetails);
+
 export default router;
