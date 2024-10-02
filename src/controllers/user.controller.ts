@@ -6,6 +6,8 @@ import User, { IUser } from "../models/user.model";
 import uploadOnCloudnary from "../utils/cloudnary.ts";
 import logger from "../utils/logger.ts";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import { ObjectId } from "mongodb";
 
 interface RequestUser extends Request {
     files?:
@@ -421,8 +423,59 @@ const getUserChannelDetails = asyncHandler(
     },
 );
 
+const getUserWatchHistory = asyncHandler(
+    async (req: RequestUser, res: Response) => {
+        const user = await User.aggregate([
+            {
+                $match: new mongoose.Types.ObjectId(req?.user?._id as ObjectId),
+            },
+            {
+                $lookup: {
+                    from: "videos",
+                    foreignField: "_id",
+                    localField: "watchHistory",
+                    as: "watchHistory",
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: "users",
+                                localField: "owner",
+                                foreignField: "_id",
+                                as: "owner",
+                                pipeline: [
+                                    {
+                                        $project: {
+                                            fullname: 1,
+                                            username: 1,
+                                            avatar: 1,
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                        {
+                            $addFields: {
+                                $first: "$owner", // this $first is used to retrive first element from array
+                            },
+                        },
+                    ],
+                },
+            },
+        ]);
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                user[0]?.watchHistory,
+                "User watch history received",
+            ),
+        );
+    },
+);
+
 export {
     getCurrentUser,
+    getUserChannelDetails,
     loginUser,
     logoutUser,
     registerUser,
@@ -431,7 +484,7 @@ export {
     updateCoverImagePhoto,
     updatePassword,
     updateRefreshToken,
-    getUserChannelDetails
+    getUserWatchHistory
 };
 
 // Mongoose and MongoDB aggregation pipelines are powerful tools for data analysis and transformation. Here’s a concise cheatsheet for commonly used stages in aggregation pipelines:
