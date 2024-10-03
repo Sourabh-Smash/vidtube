@@ -167,8 +167,8 @@ const logoutUser = asyncHandler(async (req: RequestUser, res: Response) => {
     await User.findByIdAndUpdate(
         req.user?._id,
         {
-            $set: {
-                refreshToken: undefined,
+            $unset: {
+                refreshToken: 1,
             },
         },
         {
@@ -389,7 +389,7 @@ const getUserChannelDetails = asyncHandler(
                         $size: "$subscribedTo",
                     },
                     isSubscribed: { // check if current user is subscribed to the channel or not
-                        $con: { // used to write conditions
+                        $cond: { // used to write conditions
                             if: { $in: [req.user?._id, "$subscribers"] }, // $in checks if a element is present in array or object or not
                             then: true,
                             else: false,
@@ -427,7 +427,11 @@ const getUserWatchHistory = asyncHandler(
     async (req: RequestUser, res: Response) => {
         const user = await User.aggregate([
             {
-                $match: new mongoose.Types.ObjectId(req?.user?._id as ObjectId),
+                $match: {
+                    _id: new mongoose.Types.ObjectId(
+                        req?.user?._id as ObjectId,
+                    ),
+                },
             },
             {
                 $lookup: {
@@ -455,7 +459,7 @@ const getUserWatchHistory = asyncHandler(
                         },
                         {
                             $addFields: {
-                                $first: "$owner", // this $first is used to retrive first element from array
+                                "owner": { $arrayElemAt: ["$owner", 0] }, // this $first is used to retrive first element from array
                             },
                         },
                     ],
@@ -476,6 +480,7 @@ const getUserWatchHistory = asyncHandler(
 export {
     getCurrentUser,
     getUserChannelDetails,
+    getUserWatchHistory,
     loginUser,
     logoutUser,
     registerUser,
@@ -484,7 +489,6 @@ export {
     updateCoverImagePhoto,
     updatePassword,
     updateRefreshToken,
-    getUserWatchHistory
 };
 
 // Mongoose and MongoDB aggregation pipelines are powerful tools for data analysis and transformation. Here’s a concise cheatsheet for commonly used stages in aggregation pipelines:
