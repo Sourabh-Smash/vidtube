@@ -1,8 +1,8 @@
-import ApiError from "../utils/ApiError.ts";
-import asyncHandler from "../utils/asyncHandler.ts";
+import { ApiError } from "../utils/ApiError.ts";
+import { asyncHandler } from "../utils/asyncHandler.ts";
 import { NextFunction, Request, Response } from "express";
-import User, { IUser } from "../models/user.model";
-import logger from "../utils/logger.ts";
+import {User, IUser } from "../models/user.model";
+import { logger } from "../utils/logger.ts";
 import jwt from "jsonwebtoken";
 
 interface DecodedToken {
@@ -17,7 +17,7 @@ interface UserRequest extends Request {
     user?: IUser;
 }
 
-const verifyJwt = asyncHandler(
+export const verifyJwt = asyncHandler(
     async (req: UserRequest, _: Response, next: NextFunction) => {
         try {
             const token = req.cookies?.accessToken ||
@@ -64,4 +64,3 @@ const verifyJwt = asyncHandler(
         }
     },
 );
-export default verifyJwt;

@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-import logger from "./logger.ts";
-import ApiError from "./ApiError.ts";
+import { logger } from "./logger.ts";
+import { ApiError } from "./ApiError.ts";
 import dotenv from "dotenv";
 dotenv.config({ path: "./.env" });
 // Configuration
@@ -30,7 +30,7 @@ interface CloudinaryUploadResult {
 //   }
 // };
 
-const uploadOnCloudnary = async (
+export const uploadOnCloudnary = async (
   localFilePath: string,
 ): Promise<CloudinaryUploadResult | never> => {
   try {
@@ -54,4 +54,3 @@ const uploadOnCloudnary = async (
     );
   }
 };
-export default uploadOnCloudnary;

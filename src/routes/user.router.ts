@@ -12,8 +12,8 @@ import {
     updatePassword,
     updateRefreshToken,
 } from "../controllers/user.controller.ts";
-import upload from "../middlewares/multer.middleware.ts";
-import verifyJwt from "../middlewares/auth.middleware.ts";
+import { upload } from "../middlewares/multer.middleware.ts";
+import { verifyJwt } from "../middlewares/auth.middleware.ts";
 const router = Router();
 
 router.route("/register").post(

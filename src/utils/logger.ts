@@ -10,7 +10,7 @@ const consoleLogFormat = format.combine(
 );
 
 // Create a Winston logger
-const logger = createLogger({
+export const logger = createLogger({
   level: "info",
   format: combine(colorize(), timestamp(), json()),
   transports: [
@@ -20,5 +20,3 @@ const logger = createLogger({
     new transports.File({ filename: "app.log" }),
   ],
 });
-
-export default logger;

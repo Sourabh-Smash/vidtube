@@ -1,8 +1,8 @@
 import mongoose from "mongoose"
 import {Comment} from "../models/comment.model.ts"
-import ApiError from "../utils/ApiError.ts";
-import ApiResponse from "../utils/ApiResponse.ts";
-import asyncHandler from "../utils/asyncHandler.ts";
+import { ApiError } from "../utils/ApiError.ts";
+import { ApiResponse } from "../utils/ApiResponse.ts";
+import { asyncHandler } from "../utils/asyncHandler.ts";
 import { Request, Response } from "express";
 
 const getVideoComments = asyncHandler(async (req, res) => {

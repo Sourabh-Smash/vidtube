@@ -14,9 +14,9 @@
 // export default connectDB;
 
 import mongoose from "mongoose";
-import logger from "../utils/logger.ts";
+import { logger } from "../utils/logger.ts";
 
-const connectDB = async (): Promise<void> => {
+export const connectDB = async (): Promise<void> => {
   try {
     // if (!process.env.MONGODB_URI) {
     //   throw new Error("MONGODB_URI is not defined in the environment variables");
@@ -34,5 +34,3 @@ const connectDB = async (): Promise<void> => {
     process.exit(1);
   }
 };
-
-export default connectDB;

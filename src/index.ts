@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
-import logger from "./utils/logger.ts";
+import { logger } from "./utils/logger.ts";
 import morgan from "morgan";
 import { app } from "./app.ts";
-import connectDB from "./db/index.ts";
+import { connectDB } from "./db/index.ts";
 dotenv.config({ path: "./.env" });
 
 const morganFormat = ":method :url :status :response-time ms";

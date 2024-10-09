@@ -9,7 +9,7 @@ app.use(express.static("public"));
 app.use(cookieParser())
 
 // import  routes
-import healthCheckRouter from "./routes/healthcheck.route.ts";
+import  healthCheckRouter  from "./routes/healthcheck.route.ts";
 import userRouter from "./routes/user.router.ts";
 
 // routes
