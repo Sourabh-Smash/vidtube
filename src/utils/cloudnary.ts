@@ -15,6 +15,10 @@ interface CloudinaryUploadResult {
   url: string;
   // Add other properties as needed based on Cloudinary's response
 }
+interface CloudinaryVideoResutl{
+  hlsurl: string;
+  duration: string | number;
+}
 // const uploadOnCloudnary = async (localFilePath:string)Promise<CloudinaryUploadResult | null> => {
 //   try {
 //     if (!localFilePath) return null;
@@ -60,7 +64,7 @@ const uploadOnCloudnary = async (
 
 const uploadVideoOnCloudinary = async (
   localFilePath: string,
-): Promise<CloudinaryUploadResult | never> => {
+): Promise<CloudinaryVideoResutl | never> => {
   try {
     if (!localFilePath) {
       throw new ApiError(
