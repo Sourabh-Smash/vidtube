@@ -3,7 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.ts";
 import { asyncHandler } from "../utils/asyncHandler.ts";
 import { Request, Response } from "express";
 import {User, IUser } from "../models/user.model";
-import {uploadOnCloudnary} from "../utils/cloudnary.ts";
+import { uploadOnCloudnary } from "../utils/cloudnary.ts";
 import {logger} from "../utils/logger.ts";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
